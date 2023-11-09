@@ -1,5 +1,10 @@
 const express = require("express");
 const app = express();
+// Import the morgan middleware
+const morgan = require("morgan");
+
+// Apply morgan to your app with the 'tiny' configuration which logs minimal information
+app.use(morgan("tiny"));
 
 app.use(express.json()); // Middleware for parsing JSON requests
 
