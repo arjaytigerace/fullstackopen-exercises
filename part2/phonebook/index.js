@@ -1,10 +1,16 @@
 const express = require("express");
 const app = express();
-// Import the morgan middleware
 const morgan = require("morgan");
 
-// Apply morgan to your app with the 'tiny' configuration which logs minimal information
-app.use(morgan("tiny"));
+// Define a new custom token for morgan which returns the JSON stringified request body
+morgan.token("body", (req) => {
+  return req.method === "POST" ? JSON.stringify(req.body) : "";
+});
+
+// Apply morgan middleware with a custom format string that includes your new token
+app.use(
+  morgan(":method :url :status :res[content-length] - :response-time ms :body")
+);
 
 app.use(express.json()); // Middleware for parsing JSON requests
 
@@ -40,7 +46,6 @@ app.get("/api/persons", (req, res) => {
 // Route for displaying info about phonebook
 app.get("/info", (req, res) => {
   const date = new Date(); // Get current date and time
-  // Send a response that includes the number of entries and the current date
   res.send(
     `<p>Phonebook has info for ${persons.length} people</p>` + `<p>${date}</p>`
   );
@@ -57,24 +62,20 @@ app.delete("/api/persons/:id", (req, res) => {
 app.post("/api/persons", (req, res) => {
   const body = req.body; // Get the body data from the request
 
-  // Check if the name or number is missing and return an error if so
   if (!body.name || !body.number) {
     return res.status(400).json({ error: "name or number is missing" });
   }
 
-  // Check if the name already exists in the phonebook and return an error if so
   if (persons.some((p) => p.name === body.name)) {
     return res.status(400).json({ error: "name must be unique" });
   }
 
-  // Create a new person object with a random id
   const newPerson = {
     id: Math.floor(Math.random() * 10000),
     name: body.name,
     number: body.number,
   };
 
-  // Add the new person to the phonebook
   persons = persons.concat(newPerson);
   res.json(newPerson); // Send the new person as the response
 });
